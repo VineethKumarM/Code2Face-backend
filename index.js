@@ -15,15 +15,13 @@ app.use(cors({
     methods: ['GET','POST']
 }));
 
-
-
 app.get("/test", (req,res) => {
     res.send("Server is Running! 0PkD3mgNLP",)
 })
 
 const userSocketMap = {};
+let cnt=0;
 function getAllConnectedClients(roomId) {
-    // Map
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
         (socketId) => {
             return {
@@ -35,15 +33,13 @@ function getAllConnectedClients(roomId) {
 }
 
 io.on('connection', (socket) => {
-    console.log('socket connected', socket.id);
-    // socket.emit("user joined",socket.id);
 
     socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
         userSocketMap[socket.id] = username;
-        console.log(roomId,username);
+        // console.log(roomId,username);
         socket.join(roomId);
         const clients = getAllConnectedClients(roomId);
-        console.log(clients);
+        
         clients.forEach(({ socketId }) => {
             io.to(socketId).emit(ACTIONS.JOINED, {
                 clients,
@@ -51,10 +47,25 @@ io.on('connection', (socket) => {
                 socketId: socket.id,
             });
         });
+        
+        if(clients.length==1) {
+            socket.emit('CreatePeer')
+        } else if(clients.length>2) {
+            socket.emit('SessionActive')
+        }
+        
     });
+    
+
+    socket.on('Offer', SendOffer)
+    socket.on('Answer', SendAnswer)
+
+    socket.on(ACTIONS.SEND_STREAM, ({ username, roomId, stream }) => {
+        
+        socket.in(roomId).emit(ACTIONS.RECV_STREAM, { username, stream });
+      });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-        // console.log(code);
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
@@ -77,10 +88,13 @@ io.on('connection', (socket) => {
 
 
 
+function SendOffer(offer) {
+    this.broadcast.emit("BackOffer", offer)
+}
 
-
-
-
+function SendAnswer(data) {
+    this.broadcast.emit("BackAnswer", data)
+}
 
 
 server.listen(PORT, ()=> {
