@@ -43,6 +43,7 @@ io.on('connection', (socket) => {
         console.log(roomId,username);
         socket.join(roomId);
         const clients = getAllConnectedClients(roomId);
+        console.log(clients);
         clients.forEach(({ socketId }) => {
             io.to(socketId).emit(ACTIONS.JOINED, {
                 clients,
@@ -53,6 +54,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
+        // console.log(code);
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
