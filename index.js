@@ -34,9 +34,9 @@ function getAllConnectedClients(roomId) {
 
 io.on('connection', (socket) => {
 
-    socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
+    socket.on(ACTIONS.JOIN, ({ roomId, username, stream }) => {
         userSocketMap[socket.id] = username;
-        // console.log(roomId,username);
+        console.log(socket.id,username);
         socket.join(roomId);
         const clients = getAllConnectedClients(roomId);
         
@@ -45,6 +45,7 @@ io.on('connection', (socket) => {
                 clients,
                 username,
                 socketId: socket.id,
+                ustream: stream,
             });
         });
         
@@ -61,8 +62,9 @@ io.on('connection', (socket) => {
     socket.on('Answer', SendAnswer)
 
     socket.on(ACTIONS.SEND_STREAM, ({ username, roomId, stream }) => {
-        
+        // console.log(typeof stream);
         socket.in(roomId).emit(ACTIONS.RECV_STREAM, { username, stream });
+        console.log(typeof stream);
       });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
