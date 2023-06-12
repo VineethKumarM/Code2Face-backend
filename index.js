@@ -56,15 +56,12 @@ io.on('connection', (socket) => {
         }
         
     });
-    
 
-    socket.on('Offer', SendOffer)
-    socket.on('Answer', SendAnswer)
 
     socket.on(ACTIONS.SEND_STREAM, ({ username, roomId, stream }) => {
         // console.log(typeof stream);
         socket.in(roomId).emit(ACTIONS.RECV_STREAM, { username, stream });
-        console.log(typeof stream);
+        // console.log(typeof stream);
       });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
@@ -75,7 +72,7 @@ io.on('connection', (socket) => {
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
-    socket.on('disconnecting', () => {
+    socket.on(ACTIONS.DISCONNECTED, () => {
         const rooms = [...socket.rooms];
         rooms.forEach((roomId) => {
             socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
@@ -88,15 +85,6 @@ io.on('connection', (socket) => {
     });
 });
 
-
-
-function SendOffer(offer) {
-    this.broadcast.emit("BackOffer", offer)
-}
-
-function SendAnswer(data) {
-    this.broadcast.emit("BackAnswer", data)
-}
 
 
 server.listen(PORT, ()=> {
