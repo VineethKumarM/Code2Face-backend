@@ -1,12 +1,10 @@
 const ACTIONS = {
     JOIN: 'join',
     JOINED: 'joined',
-    // V_ACEEPT: 'video-accept',
     DISCONNECTED: 'disconnected',
     CODE_CHANGE: 'code-change',
     SYNC_CODE: 'sync-code',
-    SEND_STREAM: 'send-stream',
-    RECV_STREAM: 'recv-stream',
+    SHARE_PEER_IDS: 'share-peer-ids',
     LEAVE: 'leave',
 };
 

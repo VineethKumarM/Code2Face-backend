@@ -2,25 +2,26 @@ const express  = require('express')
 const app = express();
 const server = require('http').createServer(app)
 const cors  = require('cors')
+const ACTIONS = require('./actions.js');
+const PORT = process.env.port || 3007;
 const io = require('socket.io')(server, {
     cors: {
         origin:'*',
         methods: ['GET','POST']
     }
 })
-const ACTIONS = require('./actions.js')
-const PORT = process.env.port || 3007;
+
+
 app.use(cors({
     origin:'*',
     methods: ['GET','POST']
 }));
 
-app.get("/test", (req,res) => {
-    res.send("Server is Running! 0PkD3mgNLP",)
-})
+
 
 const userSocketMap = {};
-let cnt=0;
+const userPeer = {}
+ 
 function getAllConnectedClients(roomId) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
         (socketId) => {
@@ -33,36 +34,29 @@ function getAllConnectedClients(roomId) {
 }
 
 io.on('connection', (socket) => {
+    // console.log(socket.id);
+    let id1 = socket.id
 
-    socket.on(ACTIONS.JOIN, ({ roomId, username, stream }) => {
+
+    socket.on(ACTIONS.JOIN, ({ roomId, username, peerId }) => {
         userSocketMap[socket.id] = username;
-        console.log(socket.id,username);
-        socket.join(roomId);
+        userPeer[peerId] = username
+        // console.log(socket.id,username);
         const clients = getAllConnectedClients(roomId);
-        
+        socket.join(roomId);
+        io.to(socket.id).emit(ACTIONS.SHARE_PEER_IDS, {userPeer})
         clients.forEach(({ socketId }) => {
+            // console.log('sending notif to', socketId);
             io.to(socketId).emit(ACTIONS.JOINED, {
                 clients,
                 username,
                 socketId: socket.id,
-                ustream: stream,
+                peerId
             });
         });
         
-        if(clients.length==1) {
-            socket.emit('CreatePeer')
-        } else if(clients.length>2) {
-            socket.emit('SessionActive')
-        }
-        
     });
 
-
-    socket.on(ACTIONS.SEND_STREAM, ({ username, roomId, stream }) => {
-        // console.log(typeof stream);
-        socket.in(roomId).emit(ACTIONS.RECV_STREAM, { username, stream });
-        // console.log(typeof stream);
-      });
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
