@@ -3,6 +3,7 @@ const app = express();
 const server = require('http').createServer(app)
 const cors  = require('cors')
 const ACTIONS = require('./actions.js');
+const { log } = require('console');
 const PORT = process.env.port || 3007;
 const io = require('socket.io')(server, {
     cors: {
@@ -17,11 +18,10 @@ app.use(cors({
     methods: ['GET','POST']
 }));
 
-
-
 const userSocketMap = {};
-const userPeer = {}
- 
+const userPeer = {};
+const interviewers = {}; 
+
 function getAllConnectedClients(roomId) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
         (socketId) => {
@@ -34,21 +34,25 @@ function getAllConnectedClients(roomId) {
 }
 
 io.on('connection', (socket) => {
-    // console.log(socket.id);
     let id1 = socket.id
 
-
-    socket.on(ACTIONS.JOIN, ({ roomId, username, peerId }) => {
+    socket.on(ACTIONS.JOIN, ({ roomId, username, peerId, flag }) => {
         userSocketMap[socket.id] = username;
         userPeer[peerId] = username
-        // console.log(socket.id,username);
+        if(flag) {
+            interviewers[roomId] = peerId
+            socket.in(roomId).emit(ACTIONS.SIR_JOined, {peerId})
+            console.log('interviewer');
+        }
+        // console.log(interviewers[roomId]);
+        const sir = interviewers[roomId] ? interviewers[roomId] : null
+        io.to(socket.id).emit(ACTIONS.SHARE_PEER_IDS, {userPeer, InterviewPeer:sir})
+
         const clients = getAllConnectedClients(roomId);
         socket.join(roomId);
-        io.to(socket.id).emit(ACTIONS.SHARE_PEER_IDS, {userPeer})
+
         clients.forEach(({ socketId }) => {
-            // console.log('sending notif to', socketId);
             io.to(socketId).emit(ACTIONS.JOINED, {
-                clients,
                 username,
                 socketId: socket.id,
                 peerId
@@ -57,6 +61,12 @@ io.on('connection', (socket) => {
         
     });
 
+    socket.on(ACTIONS.BEHAVIOUR, ({roomId} )=> {
+        let sir = interviewers[roomId];
+        if(sir) {
+            io.to(sir).emit(ACTIONS.MONITOR);
+        }
+    })
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });

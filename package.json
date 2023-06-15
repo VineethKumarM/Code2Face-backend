@@ -1,7 +1,7 @@
 {
   "name": "c2f_backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "repository": "git@github.com:VineethKumarM/Code2Face-backend.git",
   "author": "Vineeth Kumar Munigyala <munigyala@gmail.com>",
   "license": "MIT",
