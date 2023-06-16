@@ -42,9 +42,8 @@ io.on('connection', (socket) => {
         if(flag) {
             interviewers[roomId] = peerId
             socket.in(roomId).emit(ACTIONS.SIR_JOined, {peerId})
-            console.log('interviewer');
         }
-        // console.log(interviewers[roomId]);
+
         const sir = interviewers[roomId] ? interviewers[roomId] : null
         io.to(socket.id).emit(ACTIONS.SHARE_PEER_IDS, {userPeer, InterviewPeer:sir})
 
@@ -72,9 +71,18 @@ io.on('connection', (socket) => {
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
-    socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
-        io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
+    socket.on(ACTIONS.SYNC_CODE, ({ socketId, globalCode }) => {
+        io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code:globalCode });
     });
+
+    socket.on(ACTIONS.SEND_MSG, ({roomId, sender, msg}) => {
+        socket.in(roomId).emit(ACTIONS.RECV_MSG, {sender, text:msg})
+    })
+
+    socket.on(ACTIONS.LANG_CHANGE, ({roomId, lang}) => {
+        socket.in(roomId).emit(ACTIONS.UPDATE_LAN, {lang})
+    }
+    )
 
     socket.on(ACTIONS.DISCONNECTED, () => {
         const rooms = [...socket.rooms];
