@@ -14,9 +14,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-const userSocketMap = {};
-const userPeer = {};
-
 const peerRoom = {}
 const interviewers = {}; 
 
@@ -53,7 +50,7 @@ app.get("/get_data", (req, res) => {
   
 app.post("/join", (req,res) => {
     const {roomId, peerId, flag, username} = req.body;
-    console.log(peerId);
+
     
     let arr = [] ;
     if(peerRoom[roomId]) arr= Array.from(peerRoom[roomId])
@@ -73,18 +70,6 @@ app.post("/leave", (req,res) => {
     peerRoom[roomId]?.delete(peerId)
     
 })
-
-// function getAllConnectedClients(roomId) {
-//     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
-//         (socketId) => {
-//             return {
-//                 socketId,
-//                 username: userSocketMap[socketId],
-//             };
-//         }
-//     );
-// }
-
 
 
 app.listen(PORT, ()=> {
