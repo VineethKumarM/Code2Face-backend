@@ -2,9 +2,9 @@ const express  = require('express')
 const app = express();
 const fs = require("fs");
 const path = require("path");
-
+const {ExpressPeerServer} = require("peer")
 const cors  = require('cors');
-
+const http = require('http')
 const PORT = process.env.port || 3007;
 
 
@@ -72,7 +72,13 @@ app.post("/leave", (req,res) => {
 })
 
 
-app.listen(PORT, ()=> {
+const Server = app.listen(PORT, ()=> {
     console.log('Server is running on ' , PORT);
 })
+
+const peerServer = ExpressPeerServer(Server, {
+	path: "/",
+});
+
+app.use("/myapp", peerServer);
 
