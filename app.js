@@ -61,7 +61,11 @@ app.post("/join", (req,res) => {
     if(flag) {
         interviewers[roomId] = peerId
     }
-    res.json(arr);
+    let res_arr = {
+        data:arr
+    }
+    if(interviewers[roomId] != undefined && interviewers[roomId]!=peerId) res_arr['sir'] = peerId
+    res.json(res_arr);
 })
 
 
